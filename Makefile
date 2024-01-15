@@ -17,14 +17,14 @@ include $(DEVKITPRO)/libnx/switch_rules
 # INCLUDES is a list of directories containing header files
 # EXEFS_SRC is the optional input directory containing data copied into exefs, if anything this normally should only contain "main.npdm".
 #---------------------------------------------------------------------------------
-APP_TITLEID   := 4100000000000324
-TARGET		:=	sys-http
-BUILD		:=	build
-OUTDIR := out
-SOURCES		:=	source
-DATA		:=	data
-INCLUDES	:=	include
-EXEFS_SRC	:=	exefs_src
+APP_TITLEID := 4100000000000324
+TARGET		:= sys-http
+BUILD		:= build
+OUTDIR 		:= dist
+SOURCES		:= source
+DATA		:= data
+INCLUDES	:= include
+EXEFS_SRC	:= exefs_src
 
 #---------------------------------------------------------------------------------
 # options for code generation

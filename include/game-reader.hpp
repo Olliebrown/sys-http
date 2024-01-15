@@ -14,7 +14,8 @@ class GameReader {
   Result RefreshMetadata() {
     m_hasMetadata = false;
     return doWithDmntchtSession([]() { return 0; });
-  };
+  }
+
   Result GetTitleId(u64 *titleId) {
     RETURN_IF_FAIL(RefreshMetadata());
 
@@ -22,6 +23,7 @@ class GameReader {
 
     return 0;
   }
+
   Result ReadHeap(u64 offset, void *buffer, size_t size) {
     return doWithDmntchtSession([this, offset, buffer, size]() {
       return dmntchtReadCheatProcessMemory(m_metadata.heap_extents.base + offset, buffer, size);

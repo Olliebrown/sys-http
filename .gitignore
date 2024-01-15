@@ -1,5 +1,6 @@
 out
 build
+dist
 *.elf
 *.npdm
 *.nsp
