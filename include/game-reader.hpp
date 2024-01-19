@@ -18,9 +18,7 @@ class GameReader {
 
   Result GetTitleId(u64 *titleId) {
     RETURN_IF_FAIL(RefreshMetadata());
-
     *titleId = m_metadata.title_id;
-
     return 0;
   }
 
@@ -43,9 +41,7 @@ class GameReader {
     }
 
     auto rc = func();
-
     dmntchtExit();
-
     return rc;
   }
 };

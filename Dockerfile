@@ -38,6 +38,9 @@ RUN ln -s /proc/mounts /etc/mtab && \
     dkp-pacman -Scc --noconfirm && \
     dkp-pacman -Sy --noconfirm switch-dev
 
+# Install cli ftp client
+RUN apt-get update && apt-get install -y ftp
+
 # Customize environment variables
 ENV LANG en_US.UTF-8
 ENV DEVKITPRO=/opt/devkitpro

@@ -1,9 +1,13 @@
 out
 build
 dist
+.env
+
 *.elf
 *.npdm
 *.nsp
 *.nsp
 *.nso
 *.stub*
+
+.DS_Store

@@ -63,7 +63,10 @@
     "typeinfo": "cpp"
   },
   "cSpell.words": [
+    "CPPHTTPLIB",
     "Dmnt",
-    "dmntcht"
+    "dmntcht",
+    "httplib",
+    "MKJSON"
   ]
 }

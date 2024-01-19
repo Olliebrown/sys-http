@@ -21,9 +21,9 @@ APP_TITLEID := 4100000000000324
 TARGET		:= sys-http
 BUILD		:= build
 OUTDIR 		:= dist
-SOURCES		:= source
+SOURCES		:= source lib
 DATA		:= data
-INCLUDES	:= include
+INCLUDES	:= include lib
 EXEFS_SRC	:= exefs_src
 
 #---------------------------------------------------------------------------------
