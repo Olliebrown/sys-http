@@ -30,16 +30,13 @@ RUN apt-get update && apt-get install -y build-essential && \
     apt-get update && apt-get install -y clang-format-12
 
 # Install python packages
-RUN python3 -m pip install toml pylint pylint-quotes keystone-engine
+RUN python3 -m pip install toml pylint pylint-quotes keystone-engine ftputil python-dotenv
 
 # Install devkitpro version of pacman and switch-dev toolchain
 RUN ln -s /proc/mounts /etc/mtab && \
     wget -O - "https://apt.devkitpro.org/install-devkitpro-pacman" | bash && \
     dkp-pacman -Scc --noconfirm && \
     dkp-pacman -Sy --noconfirm switch-dev
-
-# Install cli ftp client
-RUN apt-get update && apt-get install -y ftp
 
 # Customize environment variables
 ENV LANG en_US.UTF-8

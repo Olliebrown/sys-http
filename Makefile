@@ -9,6 +9,12 @@ endif
 TOPDIR ?= $(CURDIR)
 include $(DEVKITPRO)/libnx/switch_rules
 
+# Export all of our variables to sub-makes and sub-processes.
+export
+
+# To configure exlaunch, edit config.mk.
+include $(PWD)/config.mk
+
 #---------------------------------------------------------------------------------
 # TARGET is the name of the output
 # BUILD is the directory where object files & intermediate files will be placed
@@ -25,6 +31,9 @@ SOURCES		:= source lib
 DATA		:= data
 INCLUDES	:= include lib
 EXEFS_SRC	:= exefs_src
+
+FTP_LOCAL_DIR := $(OUTDIR)/$(APP_TITLEID)
+FTP_REMOTE_DIR := atmosphere/contents/$(APP_TITLEID)
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -126,6 +135,8 @@ clean:
 	@echo clean ...
 	@rm -fr out $(BUILD) $(TARGET).nsp $(TARGET).npdm $(TARGET).nso $(TARGET).elf
 
+deploy-ftp:
+	@$(PYTHON) $(SCRIPTS_PATH)/deploy-ftp.py
 
 #---------------------------------------------------------------------------------
 else
