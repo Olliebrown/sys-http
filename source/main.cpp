@@ -1,9 +1,10 @@
 #include <switch.h>
 
-#include "routes.hpp"
+#include "routes.h"
 
 // libnx fake heap initialization
 extern "C" {
+
 #define HEAP_SIZE 0x000340000
 
 // we aren't an applet
@@ -25,8 +26,6 @@ void __libnx_initheap(void) {
 void __appInit(void) {
 	/* Initialize services */
   smInitialize();
-  ldrDmntInitialize();
-	pmdmntInitialize();
   fsInitialize();
   fsdevMountSdmc();
   timeInitialize();
@@ -38,11 +37,10 @@ void __appExit(void) {
   fsExit();
   timeExit();
   socketExit();
-  pmdmntExit();
-  ldrDmntExit();
   smExit();
 }
-}
+
+} // extern "C"
 
 int main() {
   startServer();

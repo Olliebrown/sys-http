@@ -1,40 +1,35 @@
-#include "routes.hpp"
+#include "routes.h"
 
-#include "game-reader.hpp"
-#include "utils.hpp"
+#include "game_reader.h"
+#include "utils.h"
 #include <memory>
 
 #include "httplib.h"
-#include "res_macros.hpp"
+#include "res_macros.h"
 
 using namespace httplib;
 
-int startServer() {
-  Server server;
-  auto game = std::make_shared<GameReader>();
+namespace routes {
+  void root(const Request &req, Response &res, std::shared_ptr<GameReader> game) {
+    res.set_content("Is this updating?", "text/plain");
+  }
 
-  server.Get("/refreshMetadata", [game](const Request &req, Response &res) {
-    res.set_header("Access-Control-Allow-Origin", "*");
+  void refreshMetadata(const Request &req, Response &res, std::shared_ptr<GameReader> game) {
     SET_STATUS_FROM_RC(res, game->RefreshMetadata());
     if (res.status == 200) {
       res.set_content("OK", "text/plain");
     }
-  });
+  }
 
-  server.Get("/titleId", [game](const Request &req, Response &res) {
-    res.set_header("Access-Control-Allow-Origin", "*");
+  void titleId(const Request &req, Response &res, std::shared_ptr<GameReader> game) {
     u64 titleId = 0;
-
     SET_STATUS_FROM_RC(res, game->GetTitleId(&titleId));
     if (res.status != 200) { return; }
     auto titleIdHex = convertNumToHexString(titleId);
-
     res.set_content(titleIdHex, "text/plain");
-  });
+  }
 
-  server.Get("/readHeap", [game](const Request &req, Response &res) {
-    res.set_header("Access-Control-Allow-Origin", "*");
-
+  void readHeap(const Request &req, Response &res, std::shared_ptr<GameReader> game) {
     u64 offset = 0;
     u64 size = 0;
     std::string offsetStr = "0";
@@ -67,15 +62,41 @@ int startServer() {
 
       delete[] buffer;
     }
+  }
+} // namespace routes
+
+int startServer() {
+  Server server;
+  auto game = std::make_shared<GameReader>();
+
+  server.set_pre_routing_handler([](const Request &req, Response &res) {
+    res.set_header("Access-Control-Allow-Origin", "*");
+    return Server::HandlerResponse::Unhandled;
+  });
+
+  server.Get("/refreshMetadata", [game](const Request &req, Response &res) {
+    res.set_header("Access-Control-Allow-Origin", "*");
+    routes::refreshMetadata(req, res, game);
+  });
+
+  server.Get("/titleId", [game](const Request &req, Response &res) {
+    res.set_header("Access-Control-Allow-Origin", "*");
+    routes::titleId(req, res, game);
+  });
+
+  server.Get("/readHeap", [game](const Request &req, Response &res) {
+    res.set_header("Access-Control-Allow-Origin", "*");
+    routes::readHeap(req, res, game);
   });
 
   server.Get("/", [](const Request &req, Response &res) {
-    res.set_content("Is this updating?", "text/plain");
+    res.set_header("Access-Control-Allow-Origin", "*");
+    routes::root(req, res, nullptr);
   });
 
   while (appletMainLoop()) {
     server.listen("0.0.0.0", 3000);
-    svcSleepThread(100000000L);
+    svcSleepThread(10000000L); // 0.01 seconds
   }
 
   return 0;
