@@ -23,7 +23,10 @@ void __libnx_initheap(void) {
 }
 
 void __appInit(void) {
+	/* Initialize services */
   smInitialize();
+  ldrDmntInitialize();
+	pmdmntInitialize();
   fsInitialize();
   fsdevMountSdmc();
   timeInitialize();
@@ -33,9 +36,11 @@ void __appInit(void) {
 void __appExit(void) {
   fsdevUnmountAll();
   fsExit();
-  smExit();
   timeExit();
   socketExit();
+  pmdmntExit();
+  ldrDmntExit();
+  smExit();
 }
 }
 

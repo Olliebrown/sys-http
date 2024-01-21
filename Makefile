@@ -24,13 +24,13 @@ include $(PWD)/config.mk
 # EXEFS_SRC is the optional input directory containing data copied into exefs, if anything this normally should only contain "main.npdm".
 #---------------------------------------------------------------------------------
 APP_TITLEID := 4100000000000324
-TARGET		:= sys-http
-BUILD		:= build
-OUTDIR 		:= dist
-SOURCES		:= source lib
-DATA		:= data
-INCLUDES	:= include lib
-EXEFS_SRC	:= exefs_src
+TARGET		  := sys-http
+BUILD		    := build
+OUTDIR 		  := dist
+SOURCES		  := source lib
+DATA		    := data
+INCLUDES	  := include lib
+EXEFS_SRC	  := exefs_src
 
 FTP_LOCAL_DIR := $(OUTDIR)/$(APP_TITLEID)
 FTP_REMOTE_DIR := atmosphere/contents/$(APP_TITLEID)
