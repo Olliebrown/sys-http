@@ -428,6 +428,8 @@ bool mmap::open(const char *path) {
   size_ = static_cast<size_t>(sb.st_size);
 
 #if defined(__SWITCH__)
+  // TODO: Investigate memory-mapped IO for Switch/libnx
+  fprintf(stderr, "ERROR: Memory-mapped IO not implemented for NS platform (yet).\n");
   addr_ = nullptr;
 #else
   addr_ = ::mmap(NULL, size_, PROT_READ, MAP_PRIVATE, fd_, 0);
@@ -469,6 +471,7 @@ void mmap::close() {
 #else
   if (addr_ != nullptr) {
 #if !defined(__SWITCH__)
+    // TODO: Investigate memory-mapped IO for Switch/libnx
     munmap(addr_, size_);
 #endif
     addr_ = nullptr;
@@ -799,7 +802,7 @@ socket_t create_socket(const std::string &host, const std::string &ip, int port,
     hints.ai_flags = socket_flags;
   }
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__SWITCH__)
   if (hints.ai_family == AF_UNIX) {
     const auto addrlen = host.length();
     if (addrlen > sizeof(sockaddr_un::sun_path)) { return INVALID_SOCKET; }
@@ -3918,6 +3921,12 @@ Server::read_content_core(Stream &strm, Request &req, Response &res,
 
 bool Server::handle_file_request(const Request &req, Response &res,
                                         bool head) {
+  #if defined(__SWITCH__)
+    // TODO: Investigate direct serving of files (see detail::mmap for more)
+    fprintf(stderr, "ERROR: Serving of files is not supported on NS platform.\n");
+    return false;
+  #endif
+
   for (const auto &entry : base_dirs_) {
     // Prefix match
     if (!req.path.compare(0, entry.mount_point.size(), entry.mount_point)) {

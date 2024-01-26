@@ -1,5 +1,5 @@
---- httplib.h.temp	2024-01-26 19:06:01.013616200 +0000
-+++ httplib.h	2024-01-26 18:38:49.251682200 +0000
+--- httplib.h.temp	2024-01-26 20:24:02.812734000 +0000
++++ httplib.h	2024-01-26 19:58:35.163355300 +0000
 @@ -4,6 +4,8 @@
  //  Copyright (c) 2023 Yuji Hirose. All rights reserved.
  //  MIT License
@@ -32,11 +32,13 @@
  #include <unistd.h>
  
  using socket_t = int;
-@@ -2702,8 +2706,12 @@
+@@ -2702,8 +2706,14 @@
    }
    size_ = static_cast<size_t>(sb.st_size);
  
 +#if defined(__SWITCH__)
++  // TODO: Investigate memory-mapped IO for Switch/libnx
++  fprintf(stderr, "ERROR: Memory-mapped IO not implemented for NS platform (yet).\n");
 +  addr_ = nullptr;
 +#else
    addr_ = ::mmap(NULL, size_, PROT_READ, MAP_PRIVATE, fd_, 0);
@@ -45,17 +47,27 @@
  
    if (addr_ == nullptr) {
      close();
-@@ -2739,7 +2747,9 @@
+@@ -2739,7 +2749,10 @@
    }
  #else
    if (addr_ != nullptr) {
 +#if !defined(__SWITCH__)
++    // TODO: Investigate memory-mapped IO for Switch/libnx
      munmap(addr_, size_);
 +#endif
      addr_ = nullptr;
    }
  
-@@ -3219,7 +3229,7 @@
+@@ -3068,7 +3081,7 @@
+     hints.ai_flags = socket_flags;
+   }
+ 
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(__SWITCH__)
+   if (hints.ai_family == AF_UNIX) {
+     const auto addrlen = host.length();
+     if (addrlen > sizeof(sockaddr_un::sun_path)) { return INVALID_SOCKET; }
+@@ -3219,7 +3232,7 @@
    return ret;
  }
  
@@ -64,7 +76,20 @@
  #define USE_IF2IP
  #endif
  
-@@ -6272,19 +6282,28 @@
+@@ -6187,6 +6200,12 @@
+ 
+ inline bool Server::handle_file_request(const Request &req, Response &res,
+                                         bool head) {
++  #if defined(__SWITCH__)
++    // TODO: Investigate direct serving of files (see detail::mmap for more)
++    fprintf(stderr, "ERROR: Serving of files is not supported on NS platform.\n");
++    return false;
++  #endif
++
+   for (const auto &entry : base_dirs_) {
+     // Prefix match
+     if (!req.path.compare(0, entry.mount_point.size(), entry.mount_point)) {
+@@ -6272,19 +6291,28 @@
    auto se = detail::scope_exit([&]() { is_running_ = false; });
  
    {
@@ -97,7 +122,7 @@
        }
  #endif
        socket_t sock = accept(svr_sock_, nullptr, nullptr);
-@@ -6337,14 +6356,21 @@
+@@ -6337,14 +6365,21 @@
  #endif
        }
  
