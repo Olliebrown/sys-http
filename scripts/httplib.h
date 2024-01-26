@@ -2706,7 +2706,7 @@ inline bool mmap::open(const char *path) {
   }
   size_ = static_cast<size_t>(sb.st_size);
 
-#ifdef __SWITCH__
+#if defined(__SWITCH__)
   addr_ = nullptr;
 #else
   addr_ = ::mmap(NULL, size_, PROT_READ, MAP_PRIVATE, fd_, 0);
@@ -6291,7 +6291,7 @@ inline bool Server::listen_internal() {
       if (idle_interval_sec_ > 0 || idle_interval_usec_ > 0) {
 #endif
 
-#ifdef __SWITCH__
+#if defined(__SWITCH__)
         auto val = detail::select_read(svr_sock_, 0, 100000);
 #else
         auto val = detail::select_read(svr_sock_, idle_interval_sec_, idle_interval_usec_);
@@ -6356,7 +6356,7 @@ inline bool Server::listen_internal() {
 #endif
       }
 
-#ifdef __SWITCH__
+#if defined(__SWITCH__)
       process_and_close_socket(sock);
       detail::shutdown_socket(sock);
       detail::close_socket(sock);

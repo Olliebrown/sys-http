@@ -432,7 +432,6 @@ bool mmap::open(const char *path) {
 #else
   addr_ = ::mmap(NULL, size_, PROT_READ, MAP_PRIVATE, fd_, 0);
 #endif
-
 #endif
 
   if (addr_ == nullptr) {
@@ -4013,7 +4012,7 @@ bool Server::listen_internal() {
       if (idle_interval_sec_ > 0 || idle_interval_usec_ > 0) {
 #endif
 
-#ifdef __SWITCH__
+#if defined(__SWITCH__)
         auto val = detail::select_read(svr_sock_, 0, 100000);
 #else
         auto val = detail::select_read(svr_sock_, idle_interval_sec_, idle_interval_usec_);
@@ -4078,7 +4077,7 @@ bool Server::listen_internal() {
 #endif
       }
 
-#ifdef __SWITCH__
+#if defined(__SWITCH__)
       process_and_close_socket(sock);
       detail::shutdown_socket(sock);
       detail::close_socket(sock);

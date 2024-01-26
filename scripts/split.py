@@ -25,7 +25,7 @@ args_parser.add_argument(
 args = args_parser.parse_args()
 
 # get the current directory and configure paths
-cur_dir = os.path.dirname(sys.argv[0])
+cur_dir = '.'
 header_name = '/' + lib_name + '.h'
 source_name = '/' + lib_name + '.' + args.extension
 
