@@ -78,7 +78,14 @@
     "CPPHTTPLIB",
     "Dmnt",
     "dmntcht",
+    "dotenv",
+    "fsdev",
+    "ftputil",
     "httplib",
-    "MKJSON"
+    "initheap",
+    "libnx",
+    "MKJSON",
+    "newlib",
+    "sdmc"
   ]
 }

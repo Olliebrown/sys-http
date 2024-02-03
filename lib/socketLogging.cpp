@@ -42,7 +42,7 @@ int redirectOutputToSockets(const char* hostAddress, uint16_t hostPort)
   srv_addr.sin_family = AF_INET;
   srv_addr.sin_port = htons(hostPort);
 
-  if(inet_pton(AF_INET, hostAddress, &srv_addr.sin_addr) != 0) {
+  if(inet_pton(AF_INET, hostAddress, &srv_addr.sin_addr) <= 0) {
     close(sock);
     sock = -1;
     fprintf(stderr, "Socket Logging: failed to convert %s to INET address.\n", hostAddress);
@@ -100,20 +100,20 @@ int redirectOutputToSockets(const char* hostAddress, uint16_t hostPort)
   if (dup2(sock, STDOUT_FILENO) < 0) {
     close(sock);
     sock = -1;
-    fprintf(stdout, "Socket Logging: Failed to redirect stdout to %s on port %d.", hostAddress, hostPort);
+    fprintf(stdout, "Socket Logging: Failed to redirect stdout to %s on port %d.\n", hostAddress, hostPort);
     return -1;
   }
-  fprintf(stdout, "Socket Logging: stdout redirected to %s on port %u", hostAddress, hostPort);
+  fprintf(stdout, "Socket Logging: stdout redirected to %s on port %u.\n", hostAddress, hostPort);
 
   // Redirect stderr to the socket
   fflush(stderr);
   if (dup2(sock, STDERR_FILENO) < 0) {
     close(sock);
     sock = -1;
-    fprintf(stderr, "Socket Logging: Failed to redirect stderr to %s on port %d.", hostAddress, hostPort);
+    fprintf(stderr, "Socket Logging: Failed to redirect stderr to %s on port %d.\n", hostAddress, hostPort);
     return -1;
   }
-  fprintf(stderr, "Socket Logging: stderr redirected to %s on port %u", hostAddress, hostPort);
+  fprintf(stderr, "Socket Logging: stderr redirected to %s on port %u.\n", hostAddress, hostPort);
 
   // Return the socket
   return sock;

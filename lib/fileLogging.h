@@ -1,3 +1,3 @@
 #pragma once
 
-int redirectOutputToFiles(const char* filepath);
+int redirectOutputToFile(const char* filepath, bool append = false);

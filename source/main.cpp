@@ -3,7 +3,13 @@
 #include <switch.h>
 
 #include "routes.h"
+#include "fileLogging.h"
 #include "socketLogging.h"
+
+// Constants for redirecting stdio
+#define STDIO_FILE_PATH "sdmc:/config/sys-http/stdio.log"
+#define STDIO_SOCKET_HOST "192.168.50.226"
+#define STDIO_SOCKET_PORT 42424
 
 // libnx fake heap initialization
 extern "C" {
@@ -48,10 +54,16 @@ void __appExit(void) {
 } // extern "C"
 
 int main() {
-  // Setup remote logging to a tcp socket host
-  int socket = redirectOutputToSockets("192.168.50.226", 42424);
+  // Redirect stdio to log to files
+  int stdioFile = redirectOutputToFile(STDIO_FILE_PATH, false);
+  if (stdioFile < 0) {
+    fprintf(stderr, "Error: failed to redirect stdio to file. (%s, %d)\n", STDIO_FILE_PATH, stdioFile);
+  }
+
+  // Duplicate stdio to a tcp socket host
+  int socket = redirectOutputToSockets(STDIO_SOCKET_HOST, STDIO_SOCKET_PORT);
   if (socket < 0) {
-    fprintf(stderr, "Error: failed to connect to logging socket host. (%d)\n", socket);
+    fprintf(stderr, "Error: failed to connect to logging socket host. (%s:%d, %d)\n", STDIO_SOCKET_HOST, STDIO_SOCKET_PORT, socket);
   }
 
   // Start the HTTP server

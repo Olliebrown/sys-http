@@ -32,8 +32,8 @@ DATA		    := data
 INCLUDES	  := include lib lib/edizon-se
 EXEFS_SRC	  := exefs_src
 
-FTP_LOCAL_DIR := $(OUTDIR)/$(APP_TITLEID)
-FTP_REMOTE_DIR := atmosphere/contents/$(APP_TITLEID)
+FTP_LOCAL_DIR := $(OUTDIR)/
+FTP_REMOTE_DIR := atmosphere/contents/
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -137,6 +137,9 @@ clean:
 
 deploy-ftp:
 	@$(PYTHON) $(SCRIPTS_PATH)/deploy-ftp.py
+
+getlog-ftp:
+	@$(PYTHON) $(SCRIPTS_PATH)/getlog-ftp.py
 
 #---------------------------------------------------------------------------------
 else
