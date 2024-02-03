@@ -13,11 +13,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-// This file was taken from the Stratosphere library at https://github.com/Atmosphere-NX/Atmosphere-libs/tree/master/libstratosphere
-
 #define NX_SERVICE_ASSUME_NON_DOMAIN
-#include "dmntcht.h"
+
 #include "service_guard.h"
+#include "dmntcht.h"
 
 static Service g_dmntchtSrv;
 
@@ -30,6 +29,7 @@ Result _dmntchtInitialize(void) {
 void _dmntchtCleanup(void) {
     serviceClose(&g_dmntchtSrv);
 }
+
 
 Service* dmntchtGetServiceSession(void) {
     return &g_dmntchtSrv;
@@ -55,13 +55,60 @@ Result dmntchtGetCheatProcessEvent(Event *event) {
 
     return rc;
 }
+typedef struct {
+    u64 keys_held;
+    u64 flags;
+} CfgOverrideStatus;
+
+Result pmdmntAtmosphereGetProcessInfo(Handle* handle_out,  u64 pid) { //NcmProgramLocation *loc_out, CfgOverrideStatus *status_out,
+    Handle tmp_handle;
+
+    struct {
+        NcmProgramLocation loc;
+        CfgOverrideStatus status;
+    } out;
+
+    Result rc = serviceDispatchInOut(pmdmntGetServiceSession(), 65000, pid, out,
+        .out_handle_attrs = { SfOutHandleAttr_HipcCopy },
+        .out_handles = &tmp_handle,
+    );
+
+    if (R_SUCCEEDED(rc)) {
+        if (handle_out) {
+            *handle_out = tmp_handle;
+        } else {
+            svcCloseHandle(tmp_handle);
+        }
+
+        // if (loc_out) *loc_out = out.loc;
+        // if (status_out) *status_out = out.status;
+    }
+
+    return rc;
+}
 
 Result dmntchtGetCheatProcessMetadata(DmntCheatProcessMetadata *out_metadata) {
     return serviceDispatchOut(&g_dmntchtSrv, 65002, *out_metadata);
 }
 
+static Result _dmntchtCmdVoid(Service* srv, u32 cmd_id) {
+    return serviceDispatch(srv, cmd_id);
+}
+
 Result dmntchtForceOpenCheatProcess(void) {
-    return serviceDispatch(&g_dmntchtSrv, 65003);
+    return _dmntchtCmdVoid(&g_dmntchtSrv, 65003);
+}
+
+Result dmntchtPauseCheatProcess(void) {
+    return _dmntchtCmdVoid(&g_dmntchtSrv, 65004);
+}
+
+Result dmntchtResumeCheatProcess(void) {
+    return _dmntchtCmdVoid(&g_dmntchtSrv, 65005);
+}
+
+Result dmntchtForceCloseCheatProcess(void) {
+    return _dmntchtCmdVoid(&g_dmntchtSrv, 65006);
 }
 
 static Result _dmntchtGetCount(u64 *out_count, u32 cmd_id) {
@@ -142,6 +189,30 @@ Result dmntchtAddCheat(DmntCheatDefinition *cheat_def, bool enabled, u32 *out_ch
 
 Result dmntchtRemoveCheat(u32 cheat_id) {
     return _dmntchtCmdInU32NoOut(cheat_id, 65205);
+}
+
+Result dmntchtReadStaticRegister(u64 *out, u8 which) {
+    return serviceDispatchInOut(&g_dmntchtSrv, 65206, which, *out);
+}
+
+Result dmntchtWriteStaticRegister(u8 which, u64 value) {
+    const struct {
+        u64 which;
+        u64 value;
+    } in = { which, value };
+
+    return serviceDispatchIn(&g_dmntchtSrv, 65207, in);
+}
+
+Result dmntchtResetStaticRegisters() {
+    return _dmntchtCmdVoid(&g_dmntchtSrv, 65208);
+}
+
+Result dmntchtSetMasterCheat(DmntCheatDefinition *cheat_def)  {
+    return serviceDispatch(&g_dmntchtSrv, 65209,
+        .buffer_attrs = { SfBufferAttr_In | SfBufferAttr_HipcMapAlias | SfBufferAttr_FixedSize },
+        .buffers = { { cheat_def, sizeof(*cheat_def) } },
+    );
 }
 
 Result dmntchtGetFrozenAddressCount(u64 *out_count) {

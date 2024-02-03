@@ -1,6 +1,9 @@
+#include <cstdio>
+
 #include <switch.h>
 
 #include "routes.h"
+#include "socketLogging.h"
 
 // libnx fake heap initialization
 extern "C" {
@@ -25,6 +28,7 @@ void __libnx_initheap(void) {
 
 void __appInit(void) {
 	/* Initialize services */
+  nsInitialize();
   smInitialize();
   fsInitialize();
   fsdevMountSdmc();
@@ -38,11 +42,19 @@ void __appExit(void) {
   timeExit();
   socketExit();
   smExit();
+  nsExit();
 }
 
 } // extern "C"
 
 int main() {
+  // Setup remote logging to a tcp socket host
+  int socket = redirectOutputToSockets("192.168.50.226", 42424);
+  if (socket < 0) {
+    fprintf(stderr, "Error: failed to connect to logging socket host. (%d)\n", socket);
+  }
+
+  // Start the HTTP server
   startServer();
   return 0;
 }

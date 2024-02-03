@@ -1,8 +1,31 @@
 #pragma once
 
+#include <switch/result.h>
+
 extern "C" {
 #include <mkjson.h>
 }
+
+#define R_SUCCESS  0
+
+#define module_generic  0
+#define module_syshttp  342
+
+/// Generic error codes
+enum {
+  generic_unknown,
+  generic_allocation,
+  generic_fileio
+};
+
+/// sys-http error codes
+enum {
+  syshttp_unknown,
+  syshttp_notitleinfo,
+  syshttp_badtitleinfo,
+  syshttp_dmntcht_error,
+  syshttp_badmetadata
+};
 
 #define MAKE_ERROR_FROM_RC(rc) \
   mkjson(MKJSON_OBJ, 4, \

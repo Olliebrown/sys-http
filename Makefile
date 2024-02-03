@@ -27,9 +27,9 @@ APP_TITLEID := 4100000000000324
 TARGET		  := sys-http
 BUILD		    := build
 OUTDIR 		  := dist
-SOURCES		  := source lib
+SOURCES		  := source lib lib/edizon-se
 DATA		    := data
-INCLUDES	  := include lib
+INCLUDES	  := include lib lib/edizon-se
 EXEFS_SRC	  := exefs_src
 
 FTP_LOCAL_DIR := $(OUTDIR)/$(APP_TITLEID)

@@ -13,9 +13,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-// This file was taken from the Stratosphere library at https://github.com/Atmosphere-NX/Atmosphere-libs/tree/master/libstratosphere
 
 #pragma once
+
 #include <switch.h>
 
 #ifdef __cplusplus
@@ -65,14 +65,18 @@ Service* dmntchtGetServiceSession(void);
 
 Result dmntchtHasCheatProcess(bool *out);
 Result dmntchtGetCheatProcessEvent(Event *event);
+Result pmdmntAtmosphereGetProcessInfo(Handle* handle_out,  u64 pid);
 Result dmntchtGetCheatProcessMetadata(DmntCheatProcessMetadata *out_metadata);
 Result dmntchtForceOpenCheatProcess(void);
+Result dmntchtForceCloseCheatProcess(void);
 
 Result dmntchtGetCheatProcessMappingCount(u64 *out_count);
 Result dmntchtGetCheatProcessMappings(MemoryInfo *buffer, u64 max_count, u64 offset, u64 *out_count);
 Result dmntchtReadCheatProcessMemory(u64 address, void *buffer, size_t size);
 Result dmntchtWriteCheatProcessMemory(u64 address, const void *buffer, size_t size);
 Result dmntchtQueryCheatProcessMemory(MemoryInfo *mem_info, u64 address);
+Result dmntchtPauseCheatProcess(void);
+Result dmntchtResumeCheatProcess(void);
 
 Result dmntchtGetCheatCount(u64 *out_count);
 Result dmntchtGetCheats(DmntCheatEntry *buffer, u64 max_count, u64 offset, u64 *out_count);
@@ -80,6 +84,10 @@ Result dmntchtGetCheatById(DmntCheatEntry *out_cheat, u32 cheat_id);
 Result dmntchtToggleCheat(u32 cheat_id);
 Result dmntchtAddCheat(DmntCheatDefinition *cheat, bool enabled, u32 *out_cheat_id);
 Result dmntchtRemoveCheat(u32 cheat_id);
+Result dmntchtReadStaticRegister(u64 *out, u8 which);
+Result dmntchtWriteStaticRegister(u8 which, u64 value);
+Result dmntchtResetStaticRegisters();
+Result dmntchtSetMasterCheat(DmntCheatDefinition *cheat);
 
 Result dmntchtGetFrozenAddressCount(u64 *out_count);
 Result dmntchtGetFrozenAddresses(DmntFrozenAddressEntry *buffer, u64 max_count, u64 offset, u64 *out_count);

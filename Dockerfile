@@ -32,6 +32,10 @@ RUN apt-get update && apt-get install -y build-essential && \
 # Install python packages
 RUN python3 -m pip install toml pylint pylint-quotes keystone-engine ftputil python-dotenv requests tqdm
 
+# Install nodejs 20 and npm
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - &&\
+    apt-get install -y nodejs
+
 # Install devkitpro version of pacman and switch-dev toolchain
 RUN ln -s /proc/mounts /etc/mtab && \
     wget -O - "https://apt.devkitpro.org/install-devkitpro-pacman" | bash && \

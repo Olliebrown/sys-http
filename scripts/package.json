@@ -1,0 +1,12 @@
+{
+  "name": "nxlink-tcp-echo",
+  "version": "1.0.0",
+  "description": "NXLink Echo Host",
+  "main": "nxlink.js",
+  "type": "module",
+  "scripts": {
+    "start": "node nxlink.js"
+  },
+  "author": "Seth Berrier",
+  "license": "MIT"
+}

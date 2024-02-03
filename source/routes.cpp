@@ -9,6 +9,8 @@
 
 using namespace httplib;
 
+u64 CHUNK_SIZE = 1024;
+
 namespace routes {
   void root(const Request &req, Response &res, std::shared_ptr<GameReader> game) {
     res.set_content("Is this updating?", "text/plain");
@@ -27,6 +29,55 @@ namespace routes {
     if (res.status != 200) { return; }
     auto titleIdHex = convertNumToHexString(titleId);
     res.set_content(titleIdHex, "text/plain");
+  }
+
+  void titleIcon(const Request &req, Response &res, std::shared_ptr<GameReader> game) {
+    u8* titleIcon = nullptr;
+    u64 titleIconSize = 0;
+
+    SET_STATUS_FROM_RC(res, game->GetIcon(titleIcon, titleIconSize));
+    if (res.status == 200) {
+      res.set_content((char*)titleIcon, titleIconSize, "image/jpeg");
+    }
+  }
+
+  void titleInfo(const Request &req, Response &res, std::shared_ptr<GameReader> game) {
+    std::string titleName, titleAuthor, titleVersion;
+    u8 errorCode = 0;
+
+    auto rc = game->GetTitleInfo(titleName, titleAuthor, titleVersion, errorCode);
+    if (R_FAILED(rc)) {
+      res.status = 500;
+      res.set_content(
+        mkjson(MKJSON_OBJ, 2, \
+          MKJSON_INT, "errorCode", errorCode, \
+          MKJSON_JSON_FREE, "response",
+          MAKE_ERROR_FROM_RC(rc)
+        ), "application/json"
+      );
+    } else {
+      res.status = 200;
+    }
+
+    if (res.status == 200) {
+      res.set_content(
+        mkjson(MKJSON_OBJ, 4, \
+          MKJSON_STRING, "name", titleName.c_str(), \
+          MKJSON_STRING, "author", titleAuthor.c_str(), \
+          MKJSON_STRING, "version", titleVersion.c_str(), \
+          MKJSON_INT, "errorCode", errorCode \
+        ),
+        "application/json"
+      );
+    }
+  }
+
+  void metadata(const Request &req, Response &res, std::shared_ptr<GameReader> game) {
+    char* metadataJSON = nullptr;
+    SET_STATUS_FROM_RC(res, game->GetAllMetadata(metadataJSON));
+    if (res.status != 200) { return; }
+    res.set_content(metadataJSON, "application/json");
+    free(metadataJSON);
   }
 
   void readHeap(const Request &req, Response &res, std::shared_ptr<GameReader> game) {
@@ -75,22 +126,30 @@ int startServer() {
   });
 
   server.Get("/refreshMetadata", [game](const Request &req, Response &res) {
-    res.set_header("Access-Control-Allow-Origin", "*");
     routes::refreshMetadata(req, res, game);
   });
 
   server.Get("/titleId", [game](const Request &req, Response &res) {
-    res.set_header("Access-Control-Allow-Origin", "*");
     routes::titleId(req, res, game);
   });
 
+  server.Get("/titleIcon", [game](const Request &req, Response &res) {
+    routes::titleIcon(req, res, game);
+  });
+
+  server.Get("/titleInfo", [game](const Request &req, Response &res) {
+    routes::titleInfo(req, res, game);
+  });
+
+  server.Get("/metadata", [game](const Request &req, Response &res) {
+    routes::metadata(req, res, game);
+  });
+
   server.Get("/readHeap", [game](const Request &req, Response &res) {
-    res.set_header("Access-Control-Allow-Origin", "*");
     routes::readHeap(req, res, game);
   });
 
   server.Get("/", [](const Request &req, Response &res) {
-    res.set_header("Access-Control-Allow-Origin", "*");
     routes::root(req, res, nullptr);
   });
 

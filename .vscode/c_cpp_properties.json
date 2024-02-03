@@ -2,7 +2,7 @@
   "configurations": [
     {
       "name": "Linux",
-      "includePath": ["${workspaceFolder}/**", "${DEVKITPRO}/**"],
+      "includePath": ["include", "lib", "lib/edizon-se", "${DEVKITPRO}/**"],
       "defines": [],
       "compilerPath": "/usr/bin/gcc",
       "cStandard": "c11",
