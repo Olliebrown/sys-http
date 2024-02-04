@@ -80,7 +80,7 @@ namespace routes {
     free(metadataJSON);
   }
 
-  void readHeap(const Request &req, Response &res, std::shared_ptr<GameReader> game) {
+  void readMemory(bool heap, const Request &req, Response &res, std::shared_ptr<GameReader> game) {
     u64 offset = 0;
     u64 size = 0;
     std::string offsetStr = "0";
@@ -102,11 +102,9 @@ namespace routes {
 
     if (res.status != 400) {
       u8 *buffer = new u8[size];
-      auto rc = game->ReadHeap(offset, buffer, size);
+      SET_STATUS_FROM_RC(res, game->ReadMemoryDirect(heap, offset, buffer, size));
 
-      if (R_FAILED(rc)) {
-        res.status = 500;
-      } else {
+      if (res.status == 200) {
         auto hexString = convertByteArrayToHex(buffer, size);
         res.set_content(hexString, "text/plain");
       }
@@ -114,6 +112,56 @@ namespace routes {
       delete[] buffer;
     }
   }
+
+  void readPointers(bool heap, const Request &req, Response &res, std::shared_ptr<GameReader> game) {
+    // Read URL parameters
+    std::string offsetStr = "0";
+    std::string sizeStr = "4";
+    if (req.has_param("offsets")) {
+      offsetStr = req.get_param_value("offsets");
+    }
+
+    if (req.has_param("size")) {
+      sizeStr = req.get_param_value("size");
+    }
+
+    // Split the offset list
+    std::stringstream tokenizer(offsetStr);
+    std::string segment;
+    std::vector<std::string> segList;
+    while(std::getline(tokenizer, segment, ',')) {
+      segList.push_back(segment);
+    }
+
+    // Convert the offset list and size to u64
+    std::vector<u64> offsets;
+    u64 size = 0;
+    try {
+      for (auto &seg : segList) {
+        offsets.push_back(stoull(seg, 0, 16));
+      }
+      size = stoull(sizeStr, 0, 16);
+    } catch (const std::invalid_argument &ia) {
+      res.set_content("Invalid parameters", "text/plain");
+      res.status = 400;
+    }
+
+    // Follow the pointer offsets and read back the data
+    if (res.status != 400) {
+      u8 *buffer = new u8[size];
+      auto rc = game->ReadMemoryPointer(heap, offsets, buffer, size);
+
+      if (R_FAILED(rc)) {
+        res.status = 500;
+        res.set_content("Failed to read indirect pointer", "text/plain");
+      } else {
+        auto hexString = convertByteArrayToHex(buffer, size);
+        res.set_content(hexString, "text/plain");
+      }
+
+      delete[] buffer;
+    }
+  }  
 } // namespace routes
 
 int startServer() {
@@ -146,7 +194,19 @@ int startServer() {
   });
 
   server.Get("/readHeap", [game](const Request &req, Response &res) {
-    routes::readHeap(req, res, game);
+    routes::readMemory(true, req, res, game);
+  });
+
+  server.Get("/readHeapPointer", [game](const Request &req, Response &res) {
+    routes::readPointers(true, req, res, game);
+  });
+
+  server.Get("/readMain", [game](const Request &req, Response &res) {
+    routes::readMemory(false, req, res, game);
+  });
+
+  server.Get("/readMainPointer", [game](const Request &req, Response &res) {
+    routes::readPointers(false, req, res, game);
   });
 
   server.Get("/", [](const Request &req, Response &res) {

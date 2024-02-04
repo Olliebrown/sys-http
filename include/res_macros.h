@@ -21,10 +21,10 @@ enum {
 /// sys-http error codes
 enum {
   syshttp_unknown,
-  syshttp_notitleinfo,
-  syshttp_badtitleinfo,
+  syshttp_noTitleInfo,
+  syshttp_badTitleInfo,
   syshttp_dmntcht_error,
-  syshttp_badmetadata
+  syshttp_badMetadata
 };
 
 #define MAKE_ERROR_FROM_RC(rc) \

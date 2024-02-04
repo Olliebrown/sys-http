@@ -18,7 +18,8 @@ class GameReader {
   Result GetAllMetadata(char* &metadataJson);
   Result GetIcon(u8* &iconData, u64 &dataSize);
 
-  Result ReadHeap(u64 offset, void *buffer, size_t size);
+  Result ReadMemoryDirect(bool heapMemory, u64 offset, void *buffer, size_t size);
+  Result ReadMemoryPointer(bool heapMemory, const std::vector<u64>& offsets, void *buffer, size_t size);
 
  private:
   bool m_hasMetadata = false;

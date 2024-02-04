@@ -41,6 +41,7 @@ GameReader::~GameReader() {
 
 Result GameReader::RefreshMetadata(bool forceRefresh) {
   if (forceRefresh || !m_hasMetadata) {
+    fprintf(stdout, "Game Reader: Refreshing metadata\n");
     m_hasMetadata = false;
     return doWithDmntchtSession([]() { return 0; });
   }
@@ -56,7 +57,7 @@ Result GameReader::GetTitleId(u64 *titleId) {
 Result GameReader::GetTitleInfo(std::string &titleName, std::string &titleAuthor, std::string &titleVersion, u8 &errorCode) {
   RETURN_IF_FAIL(RefreshMetadata());
   if (m_runningGameTitle == nullptr) {
-    return MAKERESULT(module_syshttp, syshttp_badtitleinfo);
+    return MAKERESULT(module_syshttp, syshttp_badTitleInfo);
   }
 
   titleName = m_runningGameTitle->getTitleName();
@@ -70,7 +71,7 @@ Result GameReader::GetTitleInfo(std::string &titleName, std::string &titleAuthor
 Result GameReader::GetAllMetadata(char* &metadataJson) {
   return doWithDmntchtSession([this, &metadataJson]() {
     if (!m_hasMetadata) {
-      return MAKERESULT(module_syshttp, syshttp_badmetadata);
+      return MAKERESULT(module_syshttp, syshttp_badMetadata);
     }
 
     metadataJson = mkjson(MKJSON_OBJ, 9, \
@@ -91,7 +92,7 @@ Result GameReader::GetAllMetadata(char* &metadataJson) {
 Result GameReader::GetIcon(u8* &iconData, u64 &dataSize) {
   RETURN_IF_FAIL(RefreshMetadata());
   if (m_runningGameTitle == nullptr) {
-    return MAKERESULT(module_syshttp, syshttp_badtitleinfo);
+    return MAKERESULT(module_syshttp, syshttp_badTitleInfo);
   }
 
   iconData = m_runningGameTitle->getTitleIcon();
@@ -99,39 +100,73 @@ Result GameReader::GetIcon(u8* &iconData, u64 &dataSize) {
   return m_runningGameTitle->getErrorResult();
 }
 
-Result GameReader::ReadHeap(u64 offset, void *buffer, size_t size) {
-  return doWithDmntchtSession([this, offset, buffer, size]() {
-    return dmntchtReadCheatProcessMemory(m_metadata.heap_extents.base + offset, buffer, size);
+Result GameReader::ReadMemoryDirect(bool heapMemory, u64 offset, void *buffer, size_t size) {
+  u64 base = heapMemory ? m_metadata.heap_extents.base : m_metadata.main_nso_extents.base;
+  return doWithDmntchtSession([this, base, offset, buffer, size]() {
+    fprintf(stdout, "Game Reader: Reading %lu bytes from heap at offset 0x%lx\n", size, offset);
+    return dmntchtReadCheatProcessMemory(base + offset, buffer, size);
+  });
+}
+
+Result GameReader::ReadMemoryPointer(bool heapMemory, const std::vector<u64>& offsets, void *buffer, size_t size) {
+  u64 base = heapMemory ? m_metadata.heap_extents.base : m_metadata.main_nso_extents.base;
+  return doWithDmntchtSession([this, base, offsets, buffer, size]() {
+    // Read at each offset to get the next base address
+    u64 currentBase = base;
+    fprintf(stdout, "Game Reader: Resolving pointer with %lu offsets.\n", offsets.size());
+    for (std::vector<u64>::const_iterator it = offsets.begin(); it != offsets.end(); ++it) {
+      if (std::next(it) != offsets.end()) {
+        fprintf(stdout, "  > reading pointer at offset 0x%lX\n", *it);
+        RETURN_IF_FAIL(dmntchtReadCheatProcessMemory(currentBase + *it, (void*)&currentBase, sizeof(u64)));
+        fprintf(stdout, "  > read value 0x%lX\n", currentBase);
+      } else {
+        // For last offset, read the actual data into the buffer
+        fprintf(stdout, " > reading %lu bytes from heap at offset 0x%lx\n", size, *it);
+        RETURN_IF_FAIL(dmntchtReadCheatProcessMemory(currentBase + *it, buffer, size));
+      }
+    }
+
+    return (unsigned)R_SUCCESS;
   });
 }
 
 Result GameReader::doWithDmntchtSession(std::function<Result()> func) {
+  fprintf(stdout, "Game Reader: establishing dmntcht session\n");
   if (m_debugger == nullptr) {
     m_debugger = new Debugger();
 
     if (dmntPresent()) {
+      fprintf(stdout, "  > Initializing dmntcht IPC.\n");
       dmntchtInitialize();
       if (!m_debugger->m_dmnt || !dmntchtForceOpenCheatProcess()) {
+        fprintf(stdout, "  > Attaching debugger.\n");
         m_debugger->attachToProcess();
       }
     } else {
+      fprintf(stdout, "  > Attaching debugger.\n");
       m_debugger->attachToProcess();
     }
 
     if (!m_debugger->m_dmnt) {
+      fprintf(stdout, "  > Marking dmnt sysmodule as present.\n");
       m_sysmodulePresent = true;
     }
+  } else {
+    fprintf(stdout, "  > Reusing existing session.\n");
   }
 
   if (!m_hasMetadata) {
+    fprintf(stdout, "  > Retrieving fresh metadata from dmntcht.\n");
     RETURN_IF_FAIL(dmntchtGetCheatProcessMetadata(&m_metadata));
     m_hasMetadata = true;
   }
 
   if (m_runningGameTitle == nullptr) {
-    m_runningGameTitle = new Title(m_debugger->getRunningApplicationTID());
+    fprintf(stdout, "  > Constructing game title object.\n");
+    m_runningGameTitle = new Title(m_metadata.title_id);
   }
 
+  fprintf(stdout, "  > Running function with dmntcht session.\n");
   auto rc = func();
   return rc;
 }
