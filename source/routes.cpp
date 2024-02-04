@@ -2,7 +2,12 @@
 
 #include "game_reader.h"
 #include "utils.h"
+
 #include <memory>
+#include <sstream>
+#include <string>
+#include <vector>
+#include <iterator>
 
 #include "httplib.h"
 #include "res_macros.h"
@@ -81,32 +86,31 @@ namespace routes {
   }
 
   void readMemory(bool heap, const Request &req, Response &res, std::shared_ptr<GameReader> game) {
-    u64 offset = 0;
-    u64 size = 0;
     std::string offsetStr = "0";
-    std::string sizeStr = "4";
+    u64 count = 1;
+    eRequestDataType dataType = eRequestDataType_Invalid;
+    if (!getParams(req, res, offsetStr, dataType, count)) {
+      return;
+    }
 
-    if (req.has_param("offset"))
-      offsetStr = req.get_param_value("offset");
-
-    if (req.has_param("size"))
-      sizeStr = req.get_param_value("size");
-
+    u64 offset = 0;
     try {
       offset = stoull(offsetStr, 0, 16);
-      size = stoull(sizeStr, 0, 16);
     } catch (const std::invalid_argument &ia) {
-      res.set_content("Invalid parameters", "text/plain");
+      res.set_content("Invalid offset", "text/plain");
       res.status = 400;
     }
 
-    if (res.status != 400) {
-      u8 *buffer = new u8[size];
-      SET_STATUS_FROM_RC(res, game->ReadMemoryDirect(heap, offset, buffer, size));
-
+    if (res.status == 200) {
+      int stride = sizeFromType(dataType);
+      u8 *buffer = new u8[stride * count];
+      SET_STATUS_FROM_RC(res, game->ReadMemoryDirect(heap, offset, buffer, stride * count));
       if (res.status == 200) {
-        auto hexString = convertByteArrayToHex(buffer, size);
-        res.set_content(hexString, "text/plain");
+        std::vector<std::string> contents = interpretDataType(dataType, buffer, count);
+        std::ostringstream imploded;
+        std::copy(contents.begin(), contents.end(),
+           std::ostream_iterator<std::string>(imploded, "\n"));
+        res.set_content(imploded.str(), "text/plain");
       }
 
       delete[] buffer;
@@ -116,13 +120,10 @@ namespace routes {
   void readPointers(bool heap, const Request &req, Response &res, std::shared_ptr<GameReader> game) {
     // Read URL parameters
     std::string offsetStr = "0";
-    std::string sizeStr = "4";
-    if (req.has_param("offsets")) {
-      offsetStr = req.get_param_value("offsets");
-    }
-
-    if (req.has_param("size")) {
-      sizeStr = req.get_param_value("size");
+    u64 count = 1;
+    eRequestDataType dataType = eRequestDataType_Invalid;
+    if (!getParams(req, res, offsetStr, dataType, count)) {
+      return;
     }
 
     // Split the offset list
@@ -135,33 +136,31 @@ namespace routes {
 
     // Convert the offset list and size to u64
     std::vector<u64> offsets;
-    u64 size = 0;
     try {
       for (auto &seg : segList) {
         offsets.push_back(stoull(seg, 0, 16));
       }
-      size = stoull(sizeStr, 0, 16);
     } catch (const std::invalid_argument &ia) {
-      res.set_content("Invalid parameters", "text/plain");
+      res.set_content("Invalid offset list", "text/plain");
       res.status = 400;
     }
 
     // Follow the pointer offsets and read back the data
     if (res.status != 400) {
-      u8 *buffer = new u8[size];
-      auto rc = game->ReadMemoryPointer(heap, offsets, buffer, size);
-
-      if (R_FAILED(rc)) {
-        res.status = 500;
-        res.set_content("Failed to read indirect pointer", "text/plain");
-      } else {
-        auto hexString = convertByteArrayToHex(buffer, size);
-        res.set_content(hexString, "text/plain");
+      int stride = sizeFromType(dataType);
+      u8 *buffer = new u8[count * stride];
+      SET_STATUS_FROM_RC(res, game->ReadMemoryPointer(heap, offsets, buffer, count * stride));
+      if (res.status == 200) {
+        std::vector<std::string> contents = interpretDataType(dataType, buffer, count);
+        std::ostringstream imploded;
+        std::copy(contents.begin(), contents.end(),
+          std::ostream_iterator<std::string>(imploded, "\n"));
+        res.set_content(imploded.str(), "text/plain");
       }
 
       delete[] buffer;
     }
-  }  
+  }
 } // namespace routes
 
 int startServer() {
