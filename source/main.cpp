@@ -8,7 +8,7 @@
 
 // Constants for redirecting stdio
 #define STDIO_FILE_PATH "sdmc:/config/sys-http/stdio.log"
-#define STDIO_SOCKET_HOST "192.168.50.226"
+#define STDIO_SOCKET_HOST "192.168.1.9"
 #define STDIO_SOCKET_PORT 42424
 
 // libnx fake heap initialization
