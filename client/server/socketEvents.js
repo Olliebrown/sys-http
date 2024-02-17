@@ -1,7 +1,7 @@
 import debug from 'debug'
 
 // Debug loggers
-const log = debug('repeater:socket')
+const log = debug('memwitch:socket')
 
 /**
  * Initialize a new socket connection
