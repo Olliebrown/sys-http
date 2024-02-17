@@ -7,7 +7,7 @@ const server = createServer((socket) => {
   })
 
   socket.on('data', (data) => {
-    process.stdout.write(data);
+    process.stdout.write(data)
   })
 
   socket.on('end', () => {

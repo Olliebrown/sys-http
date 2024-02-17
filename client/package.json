@@ -1,0 +1,27 @@
+{
+  "name": "nxlink-tcp-echo",
+  "version": "1.0.0",
+  "description": "NXLink Echo Host",
+  "main": "nxlink.js",
+  "type": "module",
+  "scripts": {
+    "logRemote": "node ./nxlink.js",
+    "streamer": "node ./streamer.js",
+    "repeater": "node ./src/repeater.js"
+  },
+  "author": "Seth Berrier",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.4",
+    "socket.io": "^4.7.4"
+  },
+  "devDependencies": {
+    "debug": "^4.3.4",
+    "eslint": "^8.56.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-n": "^16.6.2",
+    "eslint-plugin-promise": "^6.1.1",
+    "nodemon": "^3.0.3"
+  }
+}
