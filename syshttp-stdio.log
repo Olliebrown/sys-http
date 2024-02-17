@@ -1,4 +1,2 @@
 File Logging: stdout redirected to sdmc:/config/sys-http/stdio.log.
 File Logging: stderr redirected to sdmc:/config/sys-http/stdio.log.
-Socket Logging: timed out waiting for socket to connect.
-Error: failed to connect to logging socket host. (192.168.50.226:42424, -7)

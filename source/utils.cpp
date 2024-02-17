@@ -2,9 +2,7 @@
 
 #include <iomanip>
 #include <vector>
-
-#include "httplib.h"
-using namespace httplib;
+#include <cstring>
 
 std::string convertByteArrayToHex(u8 *bytes, size_t size) {
   std::stringstream stream;
@@ -51,64 +49,66 @@ int sizeFromType(eRequestDataType dataType) {
 
 float interpretAsFloat(u8* buffer)
 {
+  u8 swapped[4] = { buffer[0], buffer[1], buffer[2], buffer[3] };
+
   float result;
-  u8 swapped[4] = {buffer[3], buffer[2], buffer[1], buffer[0]};
-  std::memcpy(&result, swapped, sizeof(result));
+  std::memcpy(&result, swapped, 4);
   return result;
 }
 
 double interpretAsDouble(u8* buffer)
 {
+  u8 swapped[8] = {buffer[0], buffer[1], buffer[2], buffer[3], buffer[4], buffer[5], buffer[6], buffer[7]};
+
   double result;
-  u8 swapped[8] = {buffer[7], buffer[6], buffer[5], buffer[4], buffer[3], buffer[2], buffer[1], buffer[0]};
   std::memcpy(&result, swapped, sizeof(result));
   return result;
 }
 
-bool getParams(const Request &req, Response &res, std::string &offsetStr, eRequestDataType &dataType, u64 &count) {
+bool getParams(const char* body, std::string &offsetStr, eRequestDataType &dataType, u64 &count) {
   // Read URL parameters
-  if (req.has_param("offset")) {
-    offsetStr = req.get_param_value("offset");
-  }
+  // if (req.has_param("offset")) {
+  //   offsetStr = req.get_param_value("offset");
+  // }
 
-  if (req.has_param("count")) {
-    std::string countStr = req.get_param_value("count");
-    try {
-      count = stoull(countStr, 0, 10);
-    } catch (const std::invalid_argument &ia) {
-      res.set_content("Invalid count", "text/plain");
-      res.status = 400;
-      return false;
-    }
-  }
+  // if (req.has_param("count")) {
+  //   std::string countStr = req.get_param_value("count");
+  //   try {
+  //     count = stoull(countStr, 0, 10);
+  //   } catch (const std::invalid_argument &ia) {
+  //     res.set_content("Invalid count", "text/plain");
+  //     res.status = 400;
+  //     return false;
+  //   }
+  // }
   
-  if (req.has_param("type")) {
-    std::string dataTypeStr = req.get_param_value("type");
-    if (dataTypeStr == "f64") {
-      dataType = eRequestDataType_f64;
-    } else if (dataTypeStr == "f32") {
-      dataType = eRequestDataType_f32;
-    } else if (dataTypeStr == "i64") {
-      dataType = eRequestDataType_i64;
-    } else if (dataTypeStr == "i32") {
-      dataType = eRequestDataType_i32;
-    } else if (dataTypeStr == "i16") {
-      dataType = eRequestDataType_i16;
-    } else if (dataTypeStr == "u64") {
-      dataType = eRequestDataType_u64;
-    } else if (dataTypeStr == "u32") {
-      dataType = eRequestDataType_u32;
-    } else if (dataTypeStr == "u16") {
-      dataType = eRequestDataType_u16;
-    } else if (dataTypeStr == "u8") {
-      dataType = eRequestDataType_u8;
-    } else {
-      dataType = eRequestDataType_Invalid;
-      res.set_content("Invalid data type", "text/plain");
-      res.status = 400;
-      return false;
-    }
-  }
+  // if (req.has_param("type")) {
+  //   std::string dataTypeStr = req.get_param_value("type");
+  //   if (dataTypeStr == "f64") {
+  //     dataType = eRequestDataType_f64;
+  //   } else if (dataTypeStr == "f32") {
+  //     dataType = eRequestDataType_f32;
+  //   } else if (dataTypeStr == "i64") {
+  //     dataType = eRequestDataType_i64;
+  //   } else if (dataTypeStr == "i32") {
+  //     dataType = eRequestDataType_i32;
+  //   } else if (dataTypeStr == "i16") {
+  //     dataType = eRequestDataType_i16;
+  //   } else if (dataTypeStr == "u64") {
+  //     dataType = eRequestDataType_u64;
+  //   } else if (dataTypeStr == "u32") {
+  //     dataType = eRequestDataType_u32;
+  //   } else if (dataTypeStr == "u16") {
+  //     dataType = eRequestDataType_u16;
+  //   } else if (dataTypeStr == "u8") {
+  //     dataType = eRequestDataType_u8;
+  //   } else {
+  //     dataType = eRequestDataType_Invalid;
+  //     res.set_content("Invalid data type", "text/plain");
+  //     res.status = 400;
+  //     return false;
+  //   }
+  // }
 
   return true;
 }

@@ -50,12 +50,10 @@ int redirectOutputToSockets(const char* hostAddress, uint16_t hostPort)
   }
 
   // Connect ot the host
-  int ret = connect(sock, (struct sockaddr *) &srv_addr, sizeof(srv_addr));
+  int ret = connect(sock, (struct sockaddr *)&srv_addr, sizeof(srv_addr));
   if (ret != 0 && errno != EINPROGRESS) {
-    int err = errno;
     close(sock);
     sock = -1;
-    close(err);
     fprintf(stderr, "Socket Logging: failed to connect to %s on port %d.\n", hostAddress, hostPort);
     return -5;
   }

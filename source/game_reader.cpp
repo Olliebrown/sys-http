@@ -131,42 +131,32 @@ Result GameReader::ReadMemoryPointer(bool heapMemory, const std::vector<u64>& of
 }
 
 Result GameReader::doWithDmntchtSession(std::function<Result()> func) {
-  fprintf(stdout, "Game Reader: establishing dmntcht session\n");
-  if (m_debugger == nullptr) {
+ if (m_debugger == nullptr) {
     m_debugger = new Debugger();
 
     if (dmntPresent()) {
-      fprintf(stdout, "  > Initializing dmntcht IPC.\n");
       dmntchtInitialize();
       if (!m_debugger->m_dmnt || !dmntchtForceOpenCheatProcess()) {
-        fprintf(stdout, "  > Attaching debugger.\n");
         m_debugger->attachToProcess();
       }
     } else {
-      fprintf(stdout, "  > Attaching debugger.\n");
       m_debugger->attachToProcess();
     }
 
     if (!m_debugger->m_dmnt) {
-      fprintf(stdout, "  > Marking dmnt sysmodule as present.\n");
       m_sysmodulePresent = true;
     }
-  } else {
-    fprintf(stdout, "  > Reusing existing session.\n");
   }
 
   if (!m_hasMetadata) {
-    fprintf(stdout, "  > Retrieving fresh metadata from dmntcht.\n");
     RETURN_IF_FAIL(dmntchtGetCheatProcessMetadata(&m_metadata));
     m_hasMetadata = true;
   }
 
   if (m_runningGameTitle == nullptr) {
-    fprintf(stdout, "  > Constructing game title object.\n");
     m_runningGameTitle = new Title(m_metadata.title_id);
   }
 
-  fprintf(stdout, "  > Running function with dmntcht session.\n");
   auto rc = func();
   return rc;
 }

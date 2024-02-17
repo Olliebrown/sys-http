@@ -45,7 +45,7 @@ CFLAGS	:=	-g -Wall -O2 -ffunction-sections \
 
 CFLAGS	+=	$(INCLUDE) -D__SWITCH__
 
-CXXFLAGS	:= $(CFLAGS) -DCPPHTTPLIB_THREAD_POOL_COUNT=0 -fno-rtti -fexceptions -std=gnu++17
+CXXFLAGS	:= $(CFLAGS) -DCPPHTTPLIB_THREAD_POOL_COUNT=0 -DCPPHTTPLIB_DISABLE_FILE_SERVER -fno-rtti -fexceptions -std=gnu++17
 
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
@@ -135,7 +135,7 @@ clean:
 	@echo clean ...
 	@rm -fr out $(BUILD) $(TARGET).nsp $(TARGET).npdm $(TARGET).nso $(TARGET).elf
 
-deploy-ftp:
+deploy-ftp: all
 	@$(PYTHON) $(SCRIPTS_PATH)/deploy-ftp.py
 
 getlog-ftp:
