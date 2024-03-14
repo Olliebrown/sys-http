@@ -2,10 +2,14 @@ import fs from 'fs'
 import esbuild from 'esbuild'
 import dotenv from 'dotenv'
 
-// Look for deploy and dev modes
-const _DEV_ = process.argv.includes('dev')
+// Look for server and dev modes
+let _DEV_ = process.argv.includes('dev')
+const _SERVE_ = process.argv.includes('serve')
 
-if (_DEV_) {
+if (_SERVE_) {
+  console.log('Doing development build with static server')
+  _DEV_ = true
+} else if (_DEV_) {
   console.log('Doing development build')
 } else {
   console.log('Doing production build')
@@ -15,9 +19,12 @@ async function doBuild () {
   // Read in secrets from the .env file
   const data = await fs.promises.readFile('.env', 'utf8')
   const buf = Buffer.from(data)
-  const config = dotenv.parse(buf)
-  for (const key in config) {
-    config[key] = `"${config[key]}"`
+  const rawConfig = dotenv.parse(buf)
+
+  // Wrap all env variables in quotes
+  const config = []
+  for (const key in rawConfig) {
+    config[key] = `"${rawConfig[key]}"`
   }
 
   // Set up the build options
@@ -45,7 +52,15 @@ async function doBuild () {
       process.exit(0)
     })
 
-    await ctx.watch()
+    // Serve or watch files
+    if (_SERVE_) {
+      await ctx.serve({
+        servedir: 'public',
+        port: rawConfig['DEV_SERVER_PORT'] ? parseInt(rawConfig['DEV_SERVER_PORT']) : 3000
+      })
+    } else {
+      await ctx.watch()
+    }
   } else {
     // Do the build
     esbuild.build(options).then(() => {

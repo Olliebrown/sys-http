@@ -10,7 +10,11 @@
     "server": "node ./server/repeater.js",
     "server:dev": "nodemon --legacy-watch ./server/repeater.js dev",
     "client": "node bundle.js",
-    "client:dev": "node bundle.js dev"
+    "client:dev": "node bundle.js dev",
+    "client:devServer": "node bundle.js dev serve"
+  },
+  "prettier": {
+    "editorconfig": true
   },
   "nodemonConfig": {
     "watch": [
@@ -46,7 +50,10 @@
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "nodemon": "^3.0.3",
+    "prettier": "^3.2.5",
+    "prettier-eslint": "^16.3.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "socket.io-client": "^4.7.4"
   }
 }

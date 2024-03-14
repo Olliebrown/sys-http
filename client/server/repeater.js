@@ -4,7 +4,7 @@ import * as socketIO from 'socket.io'
 
 import Dotenv from 'dotenv'
 import debug from 'debug'
-import { socketInit } from './socketEvents.js'
+import { setupSocketServer } from './socketEvents.js'
 
 // Load environment variables
 Dotenv.config()
@@ -16,10 +16,10 @@ const log = debug('memwitch:root')
 // Create an express HTTP server with socketIO enabled
 const app = new Express()
 const server = http.createServer(app)
-const io = new socketIO.Server(server)
+const io = new socketIO.Server(server, { serveClient: false })
 
 // Socket connection initialization
-io.on('connection', socket => socketInit(socket))
+setupSocketServer(io)
 
 // Express routes
 app.use((req, res, next) => {
